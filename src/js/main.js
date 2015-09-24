@@ -7,10 +7,12 @@ var body_width  = document.body.clientWidth * 2;
 var body_height = document.body.clientHeight * 2;
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
-var last_time_xxx = Date.now();
+var last_time_griped = Date.now();
 var vector_touch_start = new Vector2();
 var vector_touch_move = new Vector2();
 var vector_touch_end = new Vector2();
+var vector_touch_before = new Vector2();
+var force_release = new Vecor2();
 var is_touched = false;
 
 var init = function() {
@@ -22,6 +24,12 @@ var init = function() {
   });
 };
 
+var updateVectorGrip = function() {
+  if (!is_touched) return;
+  vector_touch_before.copy(vector_touch_move);
+  last_time_griped = Date.now();
+};
+
 var render = function() {
   ctx.clearRect(0, 0, body_width, body_height);
 };
@@ -31,10 +39,9 @@ var renderloop = function() {
   
   requestAnimationFrame(renderloop);
   render();
-  // if (now - last_time_xxx > 1000) {
-  //   function_name();
-  //   last_time_xxx = Date.now();
-  // }
+  if (now - last_time_griped > 200) {
+    updateVectorGrip();
+  }
 };
 
 var resizeCanvas = function() {
@@ -50,6 +57,7 @@ var resizeCanvas = function() {
 var setEvent = function () {
   var eventTouchStart = function(x, y) {
     vector_touch_start.set(x, y);
+    force_release.set(0, 0);
     is_touched = true;
   };
   
@@ -61,7 +69,11 @@ var setEvent = function () {
   };
   
   var eventTouchEnd = function(x, y) {
+    var force = null;
+    
     vector_touch_end.set(x, y);
+    force = vector_touch_before.clone().sub(vector_touch_end);
+    force_release.copy(force);
     is_touched = false;
   };
 
